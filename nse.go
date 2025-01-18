@@ -2,22 +2,40 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
 	"time"
+
+	"github.com/im-naren/sentinel/utils"
 )
 
 type NSELive struct {
-	client  *Request
+	client  *utils.Request
 	baseURL string
 	pageURL string
 	routes  map[string]string
+	headers map[string]string
+}
+
+func initialize_nse(client *utils.Request, headers map[string]string) {
+	url := "https://www.nseindia.com"
+	client.Get(url, nil, headers, nil)
 }
 
 func NewNSELive() *NSELive {
-	client := &Request{
-		Timeout: 5 * time.Second,
+	client := utils.NewRequest(5 * time.Second)
+	headers := map[string]string{
+		"accept":             "*/*",
+		"accept-language":    "en-IN,en;q=0.9,hi-IN;q=0.8,hi;q=0.7,en-GB;q=0.6,en-US;q=0.5",
+		"priority":           "u=1, i",
+		"referer":            "https://www.nseindia.com/market-data/live-equity-market?symbol=NIFTY%2050",
+		"sec-ch-ua":          `"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"`,
+		"sec-ch-ua-mobile":   "?0",
+		"sec-ch-ua-platform": `"macOS"`,
+		"sec-fetch-dest":     "empty",
+		"sec-fetch-mode":     "cors",
+		"sec-fetch-site":     "same-origin",
+		"user-agent":         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
 	}
+	initialize_nse(client, headers)
 
 	return &NSELive{
 		client:  client,
@@ -40,6 +58,7 @@ func NewNSELive() *NSELive {
 			"holiday_list":               "/holiday-master?type=trading",
 			"corporate_announcements":    "/corporate-announcements",
 		},
+		headers: headers,
 	}
 }
 
@@ -54,7 +73,7 @@ func (n *NSELive) get(route string, payload map[string]string) (map[string]inter
 	url := n.baseURL + n.routes[route]
 
 	var result map[string]interface{}
-	err := n.client.fetchAndUnmarshal(url, payload, nil, nil, &result)
+	err := n.client.FetchAndUnmarshal(url, payload, n.headers, nil, &result)
 	if err != nil {
 		return nil, err
 	}

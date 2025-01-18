@@ -1,19 +1,38 @@
-package main
+package utils
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"strings"
 	"time"
 )
 
 type Request struct {
+	Client  *http.Client
 	Timeout time.Duration
 }
 
+func NewRequest(timeout time.Duration) *Request {
+	jar, _ := cookiejar.New(nil) // Create a cookie jar to maintain session
+	client := &http.Client{
+		Timeout: timeout,
+		Jar:     jar,
+	}
+	return &Request{
+		Client:  client,
+		Timeout: timeout,
+	}
+}
+
 func (r *Request) buildGetURL(url string, params map[string]string) string {
+	if params == nil {
+		return url
+	}
+	
 	queryString := ""
 	for k, v := range params {
 		queryString += fmt.Sprintf("%s=%s&", k, v)
@@ -22,12 +41,11 @@ func (r *Request) buildGetURL(url string, params map[string]string) string {
 	return fmt.Sprintf("%s?%s", url, queryString)
 }
 
+func (r *Request) Get(url string, params map[string]string, headers map[string]string, cookies []*http.Cookie) (*http.Response, error) {
+	fullURL := r.buildGetURL(url, params)
+	log.Println(fullURL)
 
-func (r *Request) get(url string, params map[string]string, headers map[string]string, cookies []*http.Cookie) (*http.Response, error) {
-	client := &http.Client{}
-	url = r.buildGetURL(url, params)
-
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -42,11 +60,11 @@ func (r *Request) get(url string, params map[string]string, headers map[string]s
 		req.AddCookie(cookie)
 	}
 
-	return client.Do(req)
+	return r.Client.Do(req)
 }
 
-func (r *Request) fetchAndUnmarshal(url string, params map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
-	response, err := r.get(url, params, headers, cookies)
+func (r *Request) FetchAndUnmarshal(url string, params map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
+	response, err := r.Get(url, params, headers, cookies)
 	if err != nil {
 		return err
 	}
@@ -79,7 +97,6 @@ func (r *Request) buildPostPayload(payload map[string]string) string {
 	return payloadData
 }
 
-
 func (r *Request) post(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie) (*http.Response, error) {
 	payloadData := r.buildPostPayload(payload)
 
@@ -96,11 +113,10 @@ func (r *Request) post(url string, payload map[string]string, headers map[string
 		req.AddCookie(cookie)
 	}
 
-	client := &http.Client{}
-	return client.Do(req)
+	return r.Client.Do(req)
 }
 
-func (r *Request) psotAndUnmarshal(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
+func (r *Request) postAndUnmarshal(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
 	response, err := r.post(url, payload, headers, cookies)
 	if err != nil {
 		return err
@@ -123,4 +139,4 @@ func (r *Request) psotAndUnmarshal(url string, payload map[string]string, header
 	}
 
 	return nil
-}	
+}
