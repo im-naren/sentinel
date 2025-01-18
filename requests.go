@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -43,30 +45,29 @@ func (r *Request) get(url string, params map[string]string, headers map[string]s
 	return client.Do(req)
 }
 
-func (r *Request) fetchAndUnmarshal[T any](url string, params map[string]string, headers map[string]string, cookies []*http.Cookie) (*T, error) {
-	response, err := r. get(url, params, headers, cookies)
+func (r *Request) fetchAndUnmarshal(url string, params map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
+	response, err := r.get(url, params, headers, cookies)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer response.Body.Close()
 
 	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if _, ok := any(*new(T)).(string); ok {
-		result := any(string(responseData)).(T)
-		return &result, nil
+	if strResult, ok := result.(*string); ok {
+		*strResult = string(responseData)
+		return nil
 	}
 
-	var result T
-	err = json.Unmarshal(responseData, &result)
+	err = json.Unmarshal(responseData, result)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &result, nil
+	return nil
 }
 
 func (r *Request) buildPostPayload(payload map[string]string) string {
@@ -79,13 +80,12 @@ func (r *Request) buildPostPayload(payload map[string]string) string {
 }
 
 
-func (r *Request) post(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie) string {
+func (r *Request) post(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie) (*http.Response, error) {
 	payloadData := r.buildPostPayload(payload)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(payloadData))
 	if err != nil {
-		fmt.Println("Error:", err)
-		return ""
+		return nil, err
 	}
 
 	for k, v := range headers {
@@ -100,28 +100,27 @@ func (r *Request) post(url string, payload map[string]string, headers map[string
 	return client.Do(req)
 }
 
-func (r *Request) psotAndUnmarshal[T any](url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie) (*T, error) {
+func (r *Request) psotAndUnmarshal(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
 	response, err := r.post(url, payload, headers, cookies)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer response.Body.Close()
 
 	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if _, ok := any(*new(T)).(string); ok {
-		result := any(string(responseData)).(T)
-		return &result, nil
+	if strResult, ok := result.(*string); ok {
+		*strResult = string(responseData)
+		return nil
 	}
 
-	var result T
-	err = json.Unmarshal(responseData, &result)
+	err = json.Unmarshal(responseData, result)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &result, nil
+	return nil
 }	

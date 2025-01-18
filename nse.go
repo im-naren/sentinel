@@ -47,22 +47,16 @@ func (n *NSELive) stock_quote(symbol string) (map[string]interface{}, error) {
 	payload := map[string]string{
 		"symbol": symbol,
 	}
-
 	return n.get("stock_quote", payload)
 }
 
 func (n *NSELive) get(route string, payload map[string]string) (map[string]interface{}, error) {
 	url := n.baseURL + n.routes[route]
 
-	resp, err := n.client.fetchAndUnmarshal[string](url, payload, nil, nil)
+	var result map[string]interface{}
+	err := n.client.fetchAndUnmarshal(url, payload, nil, nil, &result)
 	if err != nil {
 		return nil, err
-	}
-
-	var result map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	return result, nil
