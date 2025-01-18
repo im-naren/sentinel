@@ -1,5 +1,5 @@
 // nse.go
-package main
+package integration
 
 import (
 	"time"
@@ -62,7 +62,7 @@ func NewNSELive() *NSELive {
 	}
 }
 
-func (n *NSELive) stock_quote(symbol string) (map[string]interface{}, error) {
+func (n *NSELive) StockQuote(symbol string) (map[string]interface{}, error) {
 	payload := map[string]string{
 		"symbol": symbol,
 	}
