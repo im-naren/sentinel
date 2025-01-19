@@ -1,3 +1,9 @@
 local-ref/
 todo.md
 .vscode/
+.DS_Store
+node_modules/
+dist/
+coverage/
+.env
+
