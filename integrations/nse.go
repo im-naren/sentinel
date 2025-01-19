@@ -69,6 +69,14 @@ func (n *NSELive) StockQuote(symbol string) (map[string]interface{}, error) {
 	return n.get("stock_quote", payload)
 }
 
+func (n *NSELive) StockMeta(symbol string) (map[string]interface{}, error) {
+	payload := map[string]string{
+		"symbol": symbol,
+	}
+	return n.get("stock_meta", payload)
+}
+
+
 func (n *NSELive) get(route string, payload map[string]string) (map[string]interface{}, error) {
 	url := n.baseURL + n.routes[route]
 

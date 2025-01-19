@@ -116,7 +116,7 @@ func (r *Request) post(url string, payload map[string]string, headers map[string
 	return r.Client.Do(req)
 }
 
-func (r *Request) postAndUnmarshal(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
+func (r *Request) PostAndUnmarshal(url string, payload map[string]string, headers map[string]string, cookies []*http.Cookie, result interface{}) error {
 	response, err := r.post(url, payload, headers, cookies)
 	if err != nil {
 		return err
