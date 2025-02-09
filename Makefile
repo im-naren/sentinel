@@ -2,11 +2,11 @@
 GO := go
 
 # Define the main package
-MAIN_PACKAGE := ./main.go
+MAIN_PACKAGE := ./cmd/main.go
 
 # Build the Go project
 build:
-	$(GO) build -o sentinel $(MAIN_PACKAGE)
+	$(GO) build -o bin/sentinel $(MAIN_PACKAGE)
 
 # Run the Go project
 run:
@@ -14,7 +14,7 @@ run:
 
 # Clean the build
 clean:
-	rm -f sentinel
+	rm -f bin/sentinel
 
 # Define the default target
 .PHONY: build run clean

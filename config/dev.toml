@@ -1,0 +1,4 @@
+[app] 
+    name = "Sentinel"
+    portfolioDataPath = "test-data"
+    portfolioDataFilePrefix = "p-"
